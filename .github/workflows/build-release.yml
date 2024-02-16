@@ -1,0 +1,85 @@
+name: Build and Release [Beta]
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+    - 'core/**'
+    - 'dist/**'
+    - '1_18_R2/**'
+    - '1_19_R3/**'
+    - '1_20_R1/**'
+    - '1_20_R2/**'
+    - '1_20_R3/**'
+    - 'pom.xml'
+    - '.github/workflows/build-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+  
+    - name: Cache Dependencies
+      id: cache-dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven
+    
+    - name: Set up Java Environment
+      uses: actions/setup-java@v4
+      with:
+        java-version: 19
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Build and Test
+      run: mvn clean package install
+      continue-on-error: true
+    
+    - name: Set outputs
+      id: short_sha
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Archive Repository
+      run: |
+        # Create a zip file of the entire repository contents
+        zip -r dev_env.zip .
+    
+    - name: Deploy to GitHub Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: RealisticVillagers-${{ steps.short_sha.outputs.sha_short }}
+        path: target/*.jar
+      continue-on-error: true
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: dev_env-${{ steps.vars.outputs.sha_short }}
+        path: dev_env.zip
+      continue-on-error: true
+    
+    - name: Publish Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          target/*.jar
+          dev_env.zip
+        body: |
+          Commit ${{ steps.short_sha.outputs.sha_short }}
+          This release is automatically compiled by GitHub Actions
+        name: RealisticVillagers Automation Compile ${{ steps.short_sha.outputs.sha_short }}
+        draft: false
+        tag_name: commit-${{ steps.short_sha.outputs.sha_short }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_KEY }}
+        GITHUB_REPOSITORY: MediumCraft/RealisticVillagers
+      continue-on-error: true
