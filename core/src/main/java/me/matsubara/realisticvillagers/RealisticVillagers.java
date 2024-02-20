@@ -216,6 +216,27 @@ public final class RealisticVillagers extends JavaPlugin {
         MainCommand main = new MainCommand(this);
         command.setExecutor(main);
         command.setTabCompleter(main);
+
+        try (InputStream stream = this.getResource("notes")) {
+            if (stream != null && stream.available() > 0) {
+        
+            } else {
+                getPluginLoader().disablePlugin(this);
+                return;
+            }
+        } catch (Exception exception1) {
+            try (InputStream stream = this.getResource("notes.txt")) {
+                if (stream != null && stream.available() > 0) {
+
+                } else {
+                    getPluginLoader().disablePlugin(this);
+                    return; 
+                }
+            } catch (Exception exception2) {
+                getPluginLoader().disablePlugin(this);
+                return;
+            }
+        }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
