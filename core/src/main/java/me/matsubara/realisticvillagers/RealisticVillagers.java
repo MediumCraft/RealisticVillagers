@@ -851,16 +851,16 @@ public final class RealisticVillagers extends JavaPlugin {
         new WhistleGUI(this, player, family.stream(), keyword);
     }
 
-    public void equipVillager(LivingEntity villager, boolean force) {
+    public void equipVillager(LivingEntity living, boolean force) {
         if (invalidLoots()) return;
 
-        Optional<IVillagerNPC> npc = converter.getNPC(villager);
+        Optional<IVillagerNPC> npc = converter.getNPC(living);
         if (npc.isEmpty()
                 || npc.get().isEquipped()
                 || !force
-                || tracker.isInvalid(villager, true)) return;
+                || tracker.isInvalid(living, true)) return;
 
-        EntityEquipment equipment = villager.getEquipment();
+        EntityEquipment equipment = living.getEquipment();
         if (equipment == null) return;
 
         Map<EquipmentSlot, ItemLoot> equipped = new HashMap<>();
@@ -879,7 +879,7 @@ public final class RealisticVillagers extends JavaPlugin {
                 if (item == null) continue;
 
                 equipment.setItem(slot, loot.randomVanillaEnchantments() ?
-                        converter.randomVanillaEnchantments(villager.getLocation(), item) :
+                        converter.randomVanillaEnchantments(living.getLocation(), item) :
                         item);
 
                 equipped.put(slot, loot);
@@ -902,7 +902,7 @@ public final class RealisticVillagers extends JavaPlugin {
                     || (loot.crossbow() && testBothHand(equipped, inHand -> inHand.getType() == Material.CROSSBOW))) {
 
                 if (loot.randomVanillaEnchantments()) {
-                    item = converter.randomVanillaEnchantments(villager.getLocation(), item);
+                    item = converter.randomVanillaEnchantments(living.getLocation(), item);
                 }
 
                 if (loot.offHandIfPossible() && equipped.get(EquipmentSlot.OFF_HAND) == null) {
@@ -910,7 +910,7 @@ public final class RealisticVillagers extends JavaPlugin {
                     continue;
                 }
 
-                if (villager instanceof InventoryHolder holder) {
+                if (living instanceof InventoryHolder holder) {
                     holder.getInventory().addItem(item);
                 }
             }
